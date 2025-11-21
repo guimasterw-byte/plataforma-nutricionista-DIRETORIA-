@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitalis • Dashboard Executivo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --preto: #000000;
+            --branco: #FFFFFF;
+            --cinza-escuro: #1D1D1F;
+            --cinza-medio: #86868B;
+            --cinza-claro: #F5F5F7;
+            --dourado: #D4AF37;
+            --verde-apple: #32D74B;
+            --azul-apple: #0A84FF;
+            --bordas: rgba(255,255,255,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+        }
+
+        body {
+            background: var(--preto);
+            color: var(--branco);
+            min-height: 100vh;
+        }
+
+        /* Layout Vertical */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--bordas);
+        }
+
+        .logo h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: var(--branco);
+            margin-bottom: 0.5rem;
+        }
+
+        .logo .subtitle {
+            font-size: 0.9rem;
+            color: var(--cinza-medio);
+            letter-spacing: 2px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: 1px solid var(--bordas);
+            border-radius: 12px;
+            color: var(--cinza-medio);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--dourado);
+            color: var(--dourado);
+        }
+
+        .tab-btn.active {
+            background: var(--dourado);
+            border-color: var(--dourado);
+            color: var(--preto);
+        }
+
+        /* Main Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--dourado), transparent);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        .card h3 {
+            color: var(--cinza-medio);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 200;
+            color: var(--branco);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--cinza-medio);
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Charts */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .chart-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+        }
+
+        /* Eventos - Layout Específico */
+        .eventos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .evento-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+            border-left: 4px solid var(--azul-apple);
+        }
+
+        .evento-card.prioritario {
+            border-left-color: var(--dourado);
+        }
+
+        .evento-date {
+            color: var(--azul-apple);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .evento-card.prioritario .evento-date {
+            color: var(--dourado);
+        }
+
+        .evento-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--branco);
+        }
+
+        .evento-info {
+            display: grid;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--cinza-medio);
+            font-size: 0.9rem;
+        }
+
+        .info-item i {
+            color: var(--azul-apple);
+            width: 16px;
+        }
+
+        .evento-card.prioritario .info-item i {
+            color: var(--dourado);
+        }
+
+        /* Finanças - Layout Específico */
+        .financas-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .finance-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+            text-align: center;
+        }
+
+        .finance-card h3 {
+            color: var(--cinza-medio);
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .finance-value {
+            font-size: 2.5rem;
+            font-weight: 200;
+            color: var(--verde-apple);
+            margin-bottom: 0.5rem;
+        }
+
+        .finance-label {
+            color: var(--cinza-medio);
+            font-size: 0.8rem;
+        }
+
+        /* Clientes - Layout Específico */
+        .clientes-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+        }
+
+        .cliente-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--bordas);
+        }
+
+        .cliente-item:last-child {
+            border-bottom: none;
+        }
+
+        .cliente-info h4 {
+            color: var(--branco);
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+        }
+
+        .cliente-info p {
+            color: var(--cinza-medio);
+            font-size: 0.9rem;
+        }
+
+        .cliente-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: rgba(50, 215, 75, 0.2);
+            color: var(--verde-apple);
+            border: 1px solid rgba(50, 215, 75, 0.3);
+        }
+
+        .status-warning {
+            background: rgba(255, 214, 10, 0.2);
+            color: #FFD60A;
+            border: 1px solid rgba(255, 214, 10, 0.3);
+        }
+
+        /* Documentos - Layout Específico */
+        .documentos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .categoria-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--bordas);
+        }
+
+        .categoria-card h3 {
+            color: var(--dourado);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .doc-list {
+            list-style: none;
+        }
+
+        .doc-list li {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--bordas);
+            color: var(--cinza-medio);
+            font-size: 0.9rem;
+        }
+
+        .doc-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Alertas */
+        .alert-section {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .alert-section h3 {
+            color: var(--dourado);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid var(--bordas);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--cinza-medio);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            border-color: var(--dourado);
+            color: var(--dourado);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 1rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                text-align: center;
+            }
+            
+            .charts-container,
+            .financas-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .eventos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>VITALIS</h1>
+                <div class="subtitle">DASHBOARD EXECUTIVO</div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="tab-btn" data-tab="eventos">
+                <i class="fas fa-calendar-alt"></i> Eventos
+            </button>
+            <button class="tab-btn" data-tab="contratos">
+                <i class="fas fa-file-contract"></i> Contratos
+            </button>
+            <button class="tab-btn" data-tab="financas">
+                <i class="fas fa-chart-line"></i> Finanças
+            </button>
+            <button class="tab-btn" data-tab="clientes">
+                <i class="fas fa-users"></i> Clientes
+            </button>
+            <button class="tab-btn" data-tab="documentos">
+                <i class="fas fa-folder"></i> Documentos
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <!-- Stats Grid -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Faturamento do Mês</h3>
+                    <div class="stat-number">R$ 8.500</div>
+                    <div class="stat-label">+12% vs mês anterior</div>
+                </div>
+                <div class="card">
+                    <h3>Metas da Semana</h3>
+                    <div class="stat-number">3/5</div>
+                    <div class="stat-label">Clientes prospectados</div>
+                </div>
+                <div class="card">
+                    <h3>Próximos Eventos</h3>
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Nos próximos 30 dias</div>
+                </div>
+                <div class="card">
+                    <h3>Pendências</h3>
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Documentos para assinar</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Evolução de Clientes</h3>
+                    <canvas id="clientesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Status dos Projetos</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alertas -->
+            <div class="alert-section">
+                <h3><i class="fas fa-exclamation-circle"></i> Alertas Importantes</h3>
+                <ul style="margin-left: 1.5rem; color: var(--cinza-medio);">
+                    <li>Pro-labore precisa ser formalizado até 30/11</li>
+                    <li>Contrato social precisa de atualização</li>
+                    <li>Seguro de responsabilidade civil vence em 15/12</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Eventos Tab -->
+        <div id="eventos" class="tab-content">
+            <h2 style="margin-bottom: 2rem; font-weight: 300; text-align: center;">Próximos Eventos 2024-2025</h2>
+            
+            <div class="eventos-grid">
+                <div class="evento-card prioritario">
+                    <div class="evento-date">NOVEMBRO 2024</div>
+                    <h3 class="evento-title">Congresso Paulista de Nutrição</h3>
+                    <div class="evento-info">
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>São Paulo/SP</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span>Nutricionistas, consultores</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Investimento: R$ 800</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--cinza-medio); margin-bottom: 1.5rem;">
+                        Parcerias com profissionais da área e posicionamento como especialistas.
+                    </p>
+                    <button class="btn">Estratégia de Atuação</button>
+                </div>
+
+                <div class="evento-card">
+                    <div class="evento-date">MAIO 2025</div>
+                    <h3 class="evento-title">APAS Show 2025</h3>
+                    <div class="evento-info">
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>São Paulo/SP - Expo Center Norte</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-users"></i>
+                            <span>Supermercadistas, redes varejistas</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Investimento: R$ 4.000-6.000</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--cinza-medio); margin-bottom: 1.5rem;">
+                        Maior feira de supermercados da América Latina. Foco total em nosso cliente ideal.
+                    </p>
+                    <button class="btn">Estratégia de Atuação</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contratos Tab -->
+        <div id="contratos" class="tab-content">
+            <h2 style="margin-bottom: 2rem; font-weight: 300; text-align: center;">Contratos Internos</h2>
+            
+            <div class="eventos-grid">
+                <div class="evento-card">
+                    <h3 class="evento-title">Contrato Social Vitalis</h3>
+                    <div class="evento-info">
+                        <div class="info-item">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Documento base da empresa</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-code-branch"></i>
+                            <span>Versão 1.0</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--cinza-medio); margin-bottom: 1.5rem;">
+                        Contrato social original da Vitalis Assessoria Nutricional Ltda.
+                    </p>
+                    <button class="btn">Visualizar Documento</button>
+                </div>
+
+                <div class="evento-card">
+                    <h3 class="evento-title">Pro-labore - Ata de Deliberação</h3>
+                    <div class="evento-info">
+                        <div class="info-item">
+                            <i class="fas fa-handshake"></i>
+                            <span>Regime de pro-labore variável</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Fase inicial</span>
+                        </div>
+                    </div>
+                    <p style="color: var(--cinza-medio); margin-bottom: 1.5rem;">
+                        Ata que estabelece o regime de pro-labore baseado em percentual do faturamento.
+                    </p>
+                    <button class="btn">Visualizar Documento</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finanças Tab -->
+        <div id="financas" class="tab-content">
+            <h2 style="margin-bottom: 2rem; font-weight: 300; text-align: center;">Gestão Financeira</h2>
+            
+            <div class="financas-grid">
+                <div class="finance-card">
+                    <h3>Faturamento Mensal</h3>
+                    <div class="finance-value">R$ 8.500</div>
+                    <div class="finance-label">Novembro 2024</div>
+                </div>
+                <div class="finance-card">
+                    <h3>Despesas do Mês</h3>
+                    <div class="finance-value">R$ 3.200</div>
+                    <div class="finance-label">-5% vs mês anterior</div>
+                </div>
+                <div class="finance-card">
+                    <h3>Lucro Projetado</h3>
+                    <div class="finance-value">R$ 5.300</div>
+                    <div class="finance-label">Margem: 62%</div>
+                </div>
+                <div class="finance-card">
+                    <h3>Pro-labore Total</h3>
+                    <div class="finance-value">R$ 850</div>
+                    <div class="finance-label">10% do faturamento</div>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Evolução Financeira</h3>
+                <canvas id="financasChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Clientes Tab -->
+        <div id="clientes" class="tab-content">
+            <h2 style="margin-bottom: 2rem; font-weight: 300; text-align: center;">Clientes & Operações</h2>
+            
+            <div class="clientes-container">
+                <div class="cliente-item">
+                    <div class="cliente-info">
+                        <h4>Supermercado Qualidade</h4>
+                        <p>Consultoria Completa • R$ 2.500/mês</p>
+                    </div>
+                    <div class="cliente-status status-success">Em dia</div>
+                </div>
+                
+                <div class="cliente-item">
+                    <div class="cliente-info">
+                        <h4>Restaurante Sabor & Arte</h4>
+                        <p>Plano Essencial • R$ 1.800/mês</p>
+                    </div>
+                    <div class="cliente-status status-success">Em dia</div>
+                </div>
+                
+                <div class="cliente-item">
+                    <div class="cliente-info">
+                        <h4>Padaria Pão Quente</h4>
+                        <p>Adequação às Normas • R$ 3.200</p>
+                    </div>
+                    <div class="cliente-status status-warning">Pendente</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentos Tab -->
+        <div id="documentos" class="tab-content">
+            <h2 style="margin-bottom: 2rem; font-weight: 300; text-align: center;">Documentos Internos</h2>
+            
+            <div class="documentos-grid">
+                <div class="categoria-card">
+                    <h3><i class="fas fa-file-contract"></i> Atas</h3>
+                    <ul class="doc-list">
+                        <li>Ata 001 - Pro-labore</li>
+                        <li>Ata 002 - Estratégia 2025</li>
+                        <li>Ata 003 - Contratações</li>
+                    </ul>
+                </div>
+                
+                <div class="categoria-card">
+                    <h3><i class="fas fa-cogs"></i> Procedimentos</h3>
+                    <ul class="doc-list">
+                        <li>SOP - Vistorias</li>
+                        <li>SOP - Auditorias</li>
+                        <li>Checklist Inicial</li>
+                        <li>Manual do Colaborador</li>
+                    </ul>
+                </div>
+                
+                <div class="categoria-card">
+                    <h3><i class="fas fa-palette"></i> Identidade Visual</h3>
+                    <ul class="doc-list">
+                        <li>Logo Principal</li>
+                        <li>Cartão de Visita</li>
+                        <li>Manual da Marca</li>
+                        <li>Templates de Apresentação</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                // Show selected tab
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Charts
+        const ctx1 = document.getElementById('clientesChart').getContext('2d');
+        const clientesChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev'],
+                datasets: [{
+                    label: 'Clientes Ativos',
+                    data: [3, 5, 8, 12, 15, 18],
+                    borderColor: '#D4AF37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#86868B' }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { color: '#86868B' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#86868B' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    }
+                }
+            }
+        });
+
+        const ctx2 = document.getElementById('statusChart').getContext('2d');
+        const statusChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['Concluído', 'Em Andamento', 'Pendente'],
+                datasets: [{
+                    data: [45, 35, 20],
+                    backgroundColor: ['#D4AF37', '#86868B', '#1D1D1F'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#86868B',
+                            padding: 20
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctx3 = document.getElementById('financasChart').getContext('2d');
+        const financasChart = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: ['Set', 'Out', 'Nov'],
+                datasets: [{
+                    label: 'Faturamento',
+                    data: [5200, 7600, 8500],
+                    backgroundColor: '#32D74B',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#86868B' }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#86868B' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#86868B' },
+                        grid: { color: 'rgba(255,255,255,0.05)' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
